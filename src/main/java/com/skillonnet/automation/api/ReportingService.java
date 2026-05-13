@@ -2,12 +2,16 @@ package com.skillonnet.automation.api;
 
 import com.skillonnet.automation.dao.ChangeRequestDAO;
 import com.skillonnet.automation.dao.ReportingDAO;
+import com.skillonnet.automation.model.ChangeRequest;
 import com.skillonnet.automation.model.ClinicPatientCount;
+import com.skillonnet.automation.model.ConditionPatientStat;
 import com.skillonnet.automation.model.MedicationPrescriptionStat;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -43,6 +47,25 @@ public class ReportingService {
         return reportingDAO.prescriptionTotalsByMedication();
     }
 
+    /** Distinct patient counts per condition — all-time. */
+    @GET
+    @Path("condition-stats")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ConditionPatientStat> conditionStats(@Context SecurityContext sc) {
+        Authz.require(sc, Roles.MEDICAL_RECORDS);
+        return reportingDAO.conditionTotals();
+    }
+
+    /** Returns all change requests ordered newest-first.
+     * Accessible to: Medical_Records only. */
+    @GET
+    @Path("change-requests")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ChangeRequest> listChangeRequests(@Context SecurityContext sc) {
+        Authz.require(sc, Roles.MEDICAL_RECORDS);
+        return changeRequestDAO.findAll();
+    }
+
     /** Stores a patient data change request for medical records review. */
     @POST
     @Path("change-requests")
@@ -52,5 +75,27 @@ public class ReportingService {
         Authz.require(sc, Roles.MEDICAL_RECORDS);
         int id = changeRequestDAO.insert(body.getRawPatientData(), body.getRequestedChanges());
         return Response.status(Response.Status.CREATED).entity(new CreatedId(id)).build();
+    }
+
+    /**
+     * Accepts or rejects a change request.
+     * Body: {@code { "status": "Accepted" }} or {@code { "status": "Rejected" }}.
+     * (General req. 16 — accept/reject procedure established by medical records office) */
+    @PUT
+    @Path("change-requests/{id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateChangeRequestStatus(
+            @Context SecurityContext sc,
+            @PathParam("id") int id,
+            ChangeRequestStatusUpdate body) {
+        Authz.require(sc, Roles.MEDICAL_RECORDS);
+        String status = body.getStatus();
+        if (!"Accepted".equals(status) && !"Rejected".equals(status)) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ApiError("status must be Accepted or Rejected"))
+                    .build();
+        }
+        changeRequestDAO.updateStatus(id, status);
+        return Response.noContent().build();
     }
 }
