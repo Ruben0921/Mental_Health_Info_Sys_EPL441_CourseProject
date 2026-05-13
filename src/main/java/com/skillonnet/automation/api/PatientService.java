@@ -38,7 +38,7 @@ public class PatientService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Patient> list(@Context SecurityContext sc) {
-        Authz.require(sc, Roles.CLINICAL, Roles.RECEPTIONIST);
+        Authz.require(sc, Roles.CLINICAL, Roles.RECEPTIONIST, Roles.MEDICAL_RECORDS);
         return patientDAO.findAll();
     }
 
@@ -53,7 +53,7 @@ public class PatientService {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Patient get(@Context SecurityContext sc, @PathParam("id") int id) {
-        Authz.require(sc, Roles.CLINICAL, Roles.RECEPTIONIST);
+        Authz.require(sc, Roles.CLINICAL, Roles.RECEPTIONIST, Roles.MEDICAL_RECORDS);
         return patientDAO.findById(id).orElseThrow(NotFoundException::new);
     }
 
