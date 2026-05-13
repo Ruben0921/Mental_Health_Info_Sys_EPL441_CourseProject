@@ -32,7 +32,7 @@ public class PatientService {
 	/**
      * Returns all patients.
      *
-     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @param sc security context - must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
      * @return a (possibly empty) list of all {@link Patient} records.
      */
     @GET
@@ -45,7 +45,7 @@ public class PatientService {
     /**
      * Returns a single patient by id.
      *
-     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @param sc security context - must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
      * @param id the primary key of the patient.
      * @return the matching {@link Patient}.
      */
@@ -60,7 +60,7 @@ public class PatientService {
    /**
      * Updates an existing patient record.
 	 * 
-     * @param sc   security context — must contain the {@code CLINICAL} role.
+     * @param sc   security context - must contain the {@code CLINICAL} role.
      * @param id   the primary key of the patient to update.
      * @param body the updated patient data.
      * @return the updated {@link Patient}.
@@ -82,7 +82,7 @@ public class PatientService {
     /**
      * Creates a new patient record.
      *
-     * @param sc  security context — must contain the {@code CLINICAL} role.
+     * @param sc  security context - must contain the {@code CLINICAL} role.
      * @param body the patient data to persist.
      * @return the newly created {@link Patient}.
      */
@@ -100,7 +100,7 @@ public class PatientService {
     /**
      * Returns all adverse reactions recorded for a patient.
      *
-     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @param sc security context - must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
      * @param id the primary key of the patient.
      * @return a (possibly empty) list of {@link AdverseReaction} records.
      */	
@@ -115,7 +115,7 @@ public class PatientService {
     /**
      * Adds an adverse reaction for a patient.
      *
-     * @param sc  security context — must contain the {@code CLINICAL} role.
+     * @param sc  security context - must contain the {@code CLINICAL} role.
      * @param patientId the primary key of the patient.
      * @param body the adverse reaction data to persist
      * @return the persisted {@link AdverseReaction} with its generated id.

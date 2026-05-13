@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MHIS — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">M</div>
+      <h1>MHIS <small>Mental Health Information System</small></h1>
+    </div>
+    <h2>Welcome back.</h2>
+    <p>Sign in with your staff credentials to continue.</p>
+    <div class="form-row"><label>Username</label><input type="text" id="login-user" placeholder="e.g. clinical1" autocomplete="username"/></div>
+    <div class="form-row"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+    <div class="form-row"><label>API Base URL</label><input type="text" id="login-api" value="http://localhost:8080"/></div>
+    <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+    <p style="margin-top:20px;font-size:11px;color:var(--ink-3);font-family:var(--font-mono);">Demo: clinical1/secret · reception1/secret · records1/secret</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  document.getElementById('login-pass').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-user').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+
+  const saved = sessionStorage.getItem('mhis_auth');
+  if (saved) {
+    const s = JSON.parse(saved);
+    const map = { Clinical: 'clinical.html', Receptionist: 'receptionist.html', Medical_Records: 'records.html' };
+    if (map[s.role]) window.location.href = map[s.role];
+  }
+</script>
+</body>
+</html>
