@@ -69,6 +69,7 @@ async function doLogin() {
     const s = {};
     results.forEach(r => s[r.key] = r.status);
     let found = null;
+    if (s.reports === 200)                          found = 'Medical_Records';
     if (s.patients === 403)                          found = 'Medical_Records';
     else if (s.appointments === 200 && s.reports === 403) found = 'Receptionist';
     else if (s.patients === 200 && s.appointments === 403) found = 'Clinical';
