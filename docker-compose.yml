@@ -1,0 +1,25 @@
+#   docker compose up -d
+#   docker compose exec db mysql -u root -psecret mental_health < src/main/resources/schema.sql
+#   docker compose exec db mysql -u root -psecret mental_health < scripts/seed-smoke.sql
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mindcare_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: mental_health
+    ports:
+      - "3306:3306"
+    volumes:
+      - mindcare_mysql_data:/var/lib/mysql
+          
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mindcare_mysql_data:
