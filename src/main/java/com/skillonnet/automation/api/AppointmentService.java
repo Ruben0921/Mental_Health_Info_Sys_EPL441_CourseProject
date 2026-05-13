@@ -45,6 +45,14 @@ public class AppointmentService {
         appointmentDAO.updateAttendance(id, body.getStatus());
     }
 
+	@PUT
+    @Path("{id}/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void markUpdated(@Context SecurityContext sc, @PathParam("id") int id, AppointmentRecordUpdated body) {
+        Authz.require(sc, Roles.RECEPTIONIST, Roles.CLINICAL);
+        appointmentDAO.markUpdated(id, body.getValue());
+    }
+
     /** Patients who missed appointments on the given calendar date. */
     @GET
     @Path("missed")

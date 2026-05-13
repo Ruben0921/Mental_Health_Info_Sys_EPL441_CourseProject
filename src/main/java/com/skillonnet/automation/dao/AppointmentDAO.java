@@ -157,6 +157,21 @@ public class AppointmentDAO {
         }
     }
 
+	public void markUpdated(int appointmentId, boolean value) {
+		String sql = "UPDATE appointment SET records_updated = ? WHERE appointment_id = ?";
+		try (Connection conn = db.newConnection();
+				PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setBoolean(1, value);
+			ps.setInt(2, appointmentId);
+			int n = ps.executeUpdate();
+			if (n == 0) {
+				throw new DatabaseException("Appointment not found: " + appointmentId);
+			}
+		} catch (SQLException e) {
+			throw new DatabaseException("update appointment failed", e);
+		}
+    }
+
     /** Missed appointments on a given local date ({@code status = 'Missed'}). */
     public List<MissedPatientRow> findMissedPatientsByDate(LocalDate date) {
         String sql = """

@@ -7,21 +7,8 @@ import jakarta.ws.rs.core.*;
 import java.util.List;
 
 /**
- * Clinical REST API extensions for consultations, prescriptions, conditions,
- * comments, and medication lookup.
- *
+ * Endpoints specific to the clinical role
  * All endpoints require {@link Roles#CLINICAL}.
- *
- * New routes:
- *   GET  /clinical/patients/{id}/appointments        → appointments for a patient
- *   GET  /clinical/appointments/{id}/prescription    → prescription for an appointment
- *   POST /clinical/appointments/{id}/prescription    → create/replace prescription
- *   GET  /clinical/appointments/{id}/condition       → condition recorded on appointment
- *   PUT  /clinical/appointments/{id}/condition       → set/update condition
- *   GET  /clinical/patients/{id}/comments            → all comments on a patient
- *   POST /clinical/patients/{id}/comments            → add a free-form comment
- *   GET  /clinical/medications                       → full medication list (for dropdowns)
- *   GET  /clinical/conditions                        → full condition list (for dropdowns)
  */
 @Path("clinical")
 public class ClinicalService {
@@ -33,8 +20,13 @@ public class ClinicalService {
     private final MedicationDAO medicationDAO         = new MedicationDAO();
     private final ConditionRefDAO conditionRefDAO     = new ConditionRefDAO();
 
-    // ── Appointments for a patient ────────────────────────────────────
-
+	/**
+     * Returns all appointments belonging to a specific patient.
+	 * 
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param patientId primary key of the patient
+     * @return a (possibly empty) list of {@link Appointment} objects serialised as JSON.
+     */
     @GET
     @Path("patients/{id}/appointments")
     @Produces(MediaType.APPLICATION_JSON)
@@ -44,8 +36,13 @@ public class ClinicalService {
         return appointmentDAO.findByPatientId(patientId);
     }
 
-    // ── Prescription for an appointment ──────────────────────────────
-
+	/**
+     * Retrieves the prescription associated with the specified appointment.
+	 * 
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param appointmentId primary key of the appointment.
+     * @return the {@link Prescription} for the appointment, or {@code null} when none exists.
+     */
     @GET
     @Path("appointments/{id}/prescription")
     @Produces(MediaType.APPLICATION_JSON)
@@ -55,6 +52,14 @@ public class ClinicalService {
         return prescriptionDAO.findByAppointmentId(appointmentId);
     }
 
+	/**
+     * Creates or replaces the prescription for the specified appointment.
+     *
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param appointmentId the surrogate primary key of the appointment.
+     * @param body          the prescription data to persist
+     * @return the persisted {@link Prescription} from the database.
+    */
     @POST
     @Path("appointments/{id}/prescription")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -68,8 +73,14 @@ public class ClinicalService {
         return prescriptionDAO.findByAppointmentId(appointmentId);
     }
 
-    // ── Condition for an appointment (patient_condition) ─────────────
-
+    /**
+     * Retrieves the clinical condition recorded of the specified appointment.
+     *
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param appointmentId the surrogate primary key of the appointment.
+     * @return the {@link PatientCondition} for the appointment, or {@code null} if none
+     * 
+     */
     @GET
     @Path("appointments/{id}/condition")
     @Produces(MediaType.APPLICATION_JSON)
@@ -79,6 +90,14 @@ public class ClinicalService {
         return conditionDAO.findByAppointmentId(appointmentId);
     }
 
+	/**
+     * Sets or updates the clinical condition for the specified appointment.
+     *
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param appointmentId the surrogate primary key of the appointment.
+     * @param body the condition data to persist.
+     * @return the persisted {@link PatientCondition}
+     */
     @PUT
     @Path("appointments/{id}/condition")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -92,8 +111,14 @@ public class ClinicalService {
         return conditionDAO.findByAppointmentId(appointmentId);
     }
 
-    // ── Comments on a patient ─────────────────────────────────────────
 
+	/**
+     * Returns all free-form clinical comments of a patient.
+	 * 
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param patientId the primary key of the patient.
+     * @return a (possibly empty) list of {@link Comment} objects.
+     */
     @GET
     @Path("patients/{id}/comments")
     @Produces(MediaType.APPLICATION_JSON)
@@ -103,6 +128,14 @@ public class ClinicalService {
         return commentDAO.findByPatientId(patientId);
     }
 
+	/**
+     * Adds a new free-form clinical comment to a patient's record.
+	 * 
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param patientId the primary key of the patient.
+     * @param body      the comment to persist
+     * @return HTTP 201 Created with a {@link CreatedId} body containing the new record id.
+     */
     @POST
     @Path("patients/{id}/comments")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -117,8 +150,13 @@ public class ClinicalService {
                        .entity(new CreatedId(id)).build();
     }
 
-    // ── Reference data lookups ────────────────────────────────────────
 
+	/**
+     * Returns the full list of available medications.
+	 * 
+     * @param sc  security context - must contain the {@code CLINICAL} role.
+     * @return the complete list of {@link Medication} records.
+     */
     @GET
     @Path("medications")
     @Produces(MediaType.APPLICATION_JSON)
@@ -127,6 +165,12 @@ public class ClinicalService {
         return medicationDAO.findAll();
     }
 
+	/**
+     * Returns the full list of recognised clinical conditions.
+     *
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @return the complete list of {@link Condition} records.
+	*/
     @GET
     @Path("conditions")
     @Produces(MediaType.APPLICATION_JSON)
