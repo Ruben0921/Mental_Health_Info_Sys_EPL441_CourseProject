@@ -29,7 +29,12 @@ public class PatientService {
 
     private final PatientDAO patientDAO = new PatientDAO();
 
-    /** Lists all patients. */
+	/**
+     * Returns all patients.
+     *
+     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @return a (possibly empty) list of all {@link Patient} records.
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Patient> list(@Context SecurityContext sc) {
@@ -37,7 +42,13 @@ public class PatientService {
         return patientDAO.findAll();
     }
 
-    /** Returns a single patient by id. */
+    /**
+     * Returns a single patient by id.
+     *
+     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @param id the primary key of the patient.
+     * @return the matching {@link Patient}.
+     */
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -46,8 +57,15 @@ public class PatientService {
         return patientDAO.findById(id).orElseThrow(NotFoundException::new);
     }
 
-    /** Updates an existing patient; rejects mismatched body id. */
-    @PUT
+   /**
+     * Updates an existing patient record.
+	 * 
+     * @param sc   security context — must contain the {@code CLINICAL} role.
+     * @param id   the primary key of the patient to update.
+     * @param body the updated patient data.
+     * @return the updated {@link Patient}.
+     */    
+	@PUT
     @Path("{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -61,7 +79,13 @@ public class PatientService {
         return patientDAO.findById(id).orElseThrow(NotFoundException::new);
     }
 	
-
+    /**
+     * Creates a new patient record.
+     *
+     * @param sc  security context — must contain the {@code CLINICAL} role.
+     * @param body the patient data to persist.
+     * @return the newly created {@link Patient}.
+     */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -73,7 +97,13 @@ public class PatientService {
 
 	private final AdverseReactionDAO adverseReactionDAO = new AdverseReactionDAO();
 
-	/** Returns all adverse reactions for a patient. */
+    /**
+     * Returns all adverse reactions recorded for a patient.
+     *
+     * @param sc security context — must contain the {@code CLINICAL} or {@code RECEPTIONIST} role.
+     * @param id the primary key of the patient.
+     * @return a (possibly empty) list of {@link AdverseReaction} records.
+     */	
 	@GET
 	@Path("{id}/adverse-reactions")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -82,7 +112,14 @@ public class PatientService {
 		return adverseReactionDAO.findByPatientId(id);
 	}
 
-	/** Adds an adverse reaction for a patient. */
+    /**
+     * Adds an adverse reaction for a patient.
+     *
+     * @param sc  security context — must contain the {@code CLINICAL} role.
+     * @param patientId the primary key of the patient.
+     * @param body the adverse reaction data to persist
+     * @return the persisted {@link AdverseReaction} with its generated id.
+     */
 	@POST
 	@Path("{id}/adverse-reactions")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -95,7 +132,13 @@ public class PatientService {
 		return body;
 	}
 
-	/** Removes an adverse reaction. */
+    /**
+     * Removes an adverse reaction by id.
+     *
+     * @param sc security context - must contain the {@code CLINICAL} role.
+     * @param patientId  the primary key of the patient.
+     * @param reactionId the primary key of the adverse reaction to delete.
+     */
 	@DELETE
 	@Path("{id}/adverse-reactions/{reactionId}")
 	public void removeAdverseReaction(@Context SecurityContext sc, @PathParam("id") int patientId, @PathParam("reactionId") int reactionId) {
