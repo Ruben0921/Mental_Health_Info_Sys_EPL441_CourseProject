@@ -129,6 +129,29 @@ public class PatientDAO {
         }
     }
 
+    /** Sets {@code deceased = TRUE} for the given patient.
+     * This is the <em>only</em> mutation that is permitted on a deceased patient
+     * record and the only path that bypasses the deceased-check in {@link #update}.
+     * Called exclusively by Medical Records staff. (General req. 18)
+     *
+     * @return the updated {@link Patient}
+     * @throws DatabaseException when the patient does not exist
+     */
+    public Patient lockDeceased(int patientId) {
+        findById(patientId).orElseThrow(() ->
+                new DatabaseException("Patient not found: " + patientId));
+ 
+        String sql = "UPDATE patients SET deceased = TRUE WHERE patient_id = ?";
+        try (Connection conn = db.newConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, patientId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("lockDeceased failed for patient " + patientId, e);
+        }
+        return findById(patientId).orElseThrow();
+    }
+
     /** Updates the self-harm history flag only. */
     public void updateSelfHarmHistory(int patientId, boolean selfHarmHistory) {
         String sql = "UPDATE patients SET self_harm_history = ? WHERE patient_id = ?";
