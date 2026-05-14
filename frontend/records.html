@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MHIS — Medical Records</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Dashboard ── */
+    .rec-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+    @media(max-width:900px){.rec-stats{grid-template-columns:repeat(2,1fr);}}
+    .rec-stat{background:#fff;border:1px solid var(--paper-3);border-radius:12px;padding:22px 24px;position:relative;overflow:hidden;}
+    .rec-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .rec-stat.blue::before{background:var(--accent);}
+    .rec-stat.green::before{background:var(--green);}
+    .rec-stat.amber::before{background:#d4900a;}
+    .rec-stat.red::before{background:var(--red);}
+    .rec-stat-icon{font-size:22px;margin-bottom:10px;}
+    .rec-stat-value{font-family:var(--font-head);font-size:40px;line-height:1;color:var(--ink);margin-bottom:4px;}
+    .rec-stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-family:var(--font-mono);}
+    .rec-stat-sub{font-size:12px;color:var(--ink-3);margin-top:6px;}
+    .rec-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+    @media(max-width:860px){.rec-two-col{grid-template-columns:1fr;}}
+
+    /* ── Quick actions ── */
+    .rec-action{display:flex;align-items:center;gap:14px;padding:14px 18px;background:#fff;
+      border:1.5px solid var(--paper-3);border-radius:10px;cursor:pointer;transition:all .15s;
+      text-align:left;font-family:var(--font-body);width:100%;margin-bottom:10px;}
+    .rec-action:last-child{margin-bottom:0;}
+    .rec-action:hover{border-color:var(--accent-lt);background:var(--blue-lt);transform:translateX(3px);}
+    .rec-action-icon{font-size:20px;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .rec-action-icon.blue{background:var(--blue-lt);}
+    .rec-action-icon.green{background:var(--green-lt);}
+    .rec-action-icon.amber{background:var(--amber-lt);}
+    .rec-action-icon.red{background:var(--red-lt);}
+    .rec-action-icon.purple{background:var(--purple-lt);}
+    .rec-action-label{font-size:13px;font-weight:600;color:var(--ink);}
+    .rec-action-sub{font-size:11px;color:var(--ink-3);margin-top:1px;}
+
+    /* ── Activity feed ── */
+    .activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--paper-2);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+    .activity-dot.blue{background:var(--accent);}.activity-dot.green{background:var(--green);}
+    .activity-dot.amber{background:#d4900a;}.activity-dot.red{background:var(--red);}
+    .activity-text{font-size:13px;color:var(--ink-2);line-height:1.4;}
+    .activity-time{font-size:11px;color:var(--ink-3);font-family:var(--font-mono);margin-top:2px;}
+
+    /* ── Charts ── */
+    .bar-chart-v2{display:flex;flex-direction:column;gap:10px;}
+    .bar-row-v2{display:flex;align-items:center;gap:12px;}
+    .bar-label-v2{font-size:12px;color:var(--ink-2);font-family:var(--font-mono);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bar-track-v2{flex:1;background:var(--paper-2);border-radius:4px;height:22px;overflow:hidden;}
+    .bar-fill-v2{height:100%;background:var(--accent);border-radius:4px;display:flex;align-items:center;padding:0 8px;transition:width .6s ease;min-width:28px;}
+    .bar-fill-v2 span{font-size:11px;font-weight:700;color:#fff;font-family:var(--font-mono);}
+    .bar-fill-v2.green{background:var(--green);}
+    .bar-fill-v2.amber{background:#d4900a;}
+
+    /* ── Weekly report ── */
+    .week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+    .week-cell{background:var(--paper-2);border-radius:8px;padding:12px;text-align:center;}
+    .week-day{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-family:var(--font-mono);margin-bottom:6px;}
+    .week-count{font-family:var(--font-head);font-size:28px;color:var(--ink);line-height:1;}
+    .week-sub{font-size:11px;color:var(--ink-3);margin-top:4px;}
+
+    /* ── Change request cards ── */
+    .cr-card{border:1px solid var(--paper-3);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+    .cr-card-header{padding:12px 16px;background:var(--paper-2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--paper-3);}
+    .cr-card-body{padding:14px 16px;}
+    .cr-field{margin-bottom:10px;}
+    .cr-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-family:var(--font-mono);display:block;margin-bottom:3px;}
+    .cr-field p{font-size:13px;color:var(--ink-2);background:var(--paper);border-radius:6px;padding:8px 12px;margin:0;border:1px solid var(--paper-3);white-space:pre-wrap;}
+    .cr-actions{display:flex;gap:8px;margin-top:12px;}
+
+    /* ── Role badges ── */
+    .role-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--font-mono);}
+    .role-badge-clinical{background:var(--blue-lt);color:var(--accent);}
+    .role-badge-receptionist{background:var(--green-lt);color:var(--green);}
+    .role-badge-records{background:var(--purple-lt);color:#534AB7;}
+
+    /* ── Permission matrix icons ── */
+    .perm-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;}
+    .perm-yes svg{stroke:#3B6D11;fill:none;}
+    .perm-no  svg{stroke:#A32D2D;fill:none;}
+    .perm-partial svg{stroke:#854F0B;fill:none;}
+    td.perm-yes{background:#EAF3DE22;}
+    td.perm-no{background:#FCEBEB22;}
+    td.perm-partial{background:#FAEEDA22;}
+    th.perm-col{text-align:center;font-size:11px;}
+    td.perm-yes, td.perm-no, td.perm-partial{text-align:center;vertical-align:middle;}
+
+    /* ── Misc ── */
+    .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:var(--font-mono);color:var(--ink-3);margin-bottom:10px;margin-top:20px;}
+    .lock-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;}
+    .lock-row input{flex:1;}
+    .log-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--paper-2);font-size:12px;}
+    .log-row:last-child{border-bottom:none;}
+    .log-time{font-family:var(--font-mono);color:var(--ink-3);width:120px;flex-shrink:0;}
+    .log-user{font-weight:600;color:var(--ink-2);width:100px;flex-shrink:0;}
+    .log-action{color:var(--ink-2);flex:1;}
+    .log-role{flex-shrink:0;}
+    .missed-notice{display:flex;align-items:center;gap:10px;background:var(--amber-lt);border:1px solid #f5d88e;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--amber);}
+    .info-banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--green-lt);border:1px solid #c0dd97;border-radius:8px;font-size:13px;color:var(--green);}
+    .info-banner-blue{display:flex;align-items:center;gap:10px;background:var(--blue-lt);border:1px solid #b5d4f4;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--accent);}
+    .btn-danger{background:var(--red);border-color:var(--red);color:#fff;}
+    .btn-danger:hover{background:#7f1f1f;border-color:#7f1f1f;}
+    .na-suggestion{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;cursor:pointer;transition:background .1s;font-size:13px;}
+    .na-suggestion:hover{background:var(--blue-lt);}
+    .na-sug-name{color:var(--ink);font-weight:500;}
+    .na-sug-meta{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);}
+    @media print{.topbar,.api-config-bar,button,.nav-btn{display:none!important;}.content{padding:0!important;}}
+  </style>
+</head>
+<body>
+<div id="app" style="min-height:100vh;">
+  <div class="api-config-bar">
+    <span>⚙</span><label>API:</label>
+    <input type="text" id="api-url-input" value="http://localhost:8080" onchange="updateApiBase(this.value)"/>
+    <span style="opacity:.6;font-size:11px;">Change if backend runs elsewhere</span>
+  </div>
+  <div class="topbar">
+    <div class="topbar-logo">MHIS <span>v1.0</span></div>
+    <nav class="topbar-nav" id="main-nav"></nav>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div><div class="user-name" id="user-display"></div><div class="user-role" id="user-role-display"></div></div>
+      </div>
+      <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-header-left"><h2 id="dash-greeting">Medical Records Office</h2><p id="dash-date-sub">Loading…</p></div>
+      </div>
+      <div class="rec-stats">
+        <div class="rec-stat blue"><div class="rec-stat-icon">&#127973;</div><div class="rec-stat-value" id="ds-clinics">—</div><div class="rec-stat-label">Active Clinics</div><div class="rec-stat-sub">With patient activity</div></div>
+        <div class="rec-stat green"><div class="rec-stat-icon">&#128101;</div><div class="rec-stat-value" id="ds-patients">—</div><div class="rec-stat-label">Total Patients</div><div class="rec-stat-sub">Across all clinics</div></div>
+        <div class="rec-stat amber"><div class="rec-stat-icon">&#128138;</div><div class="rec-stat-value" id="ds-meds">—</div><div class="rec-stat-label">Medications Tracked</div><div class="rec-stat-sub">By prescription volume</div></div>
+        <div class="rec-stat red"><div class="rec-stat-icon">&#128203;</div><div class="rec-stat-value" id="ds-cr">—</div><div class="rec-stat-label">Pending Requests</div><div class="rec-stat-sub">Change requests open</div></div>
+      </div>
+      <div class="rec-two-col">
+        <div class="card">
+          <div class="card-title">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <button class="rec-action" onclick="navTo('reports')"><div class="rec-action-icon blue">&#128202;</div><div><div class="rec-action-label">Management Reports</div><div class="rec-action-sub">Clinic attendance &amp; prescription stats</div></div></button>
+            <button class="rec-action" onclick="navTo('weekly')"><div class="rec-action-icon green">&#128197;</div><div><div class="rec-action-label">Weekly Report</div><div class="rec-action-sub">Per-clinic attendance by day</div></div></button>
+            <button class="rec-action" onclick="navTo('change-requests')"><div class="rec-action-icon amber">&#128221;</div><div><div class="rec-action-label">Change Requests</div><div class="rec-action-sub">Review &amp; accept/reject patient data changes</div></div></button>
+            <button class="rec-action" onclick="navTo('access')"><div class="rec-action-icon purple">&#128274;</div><div><div class="rec-action-label">Access Control</div><div class="rec-action-sub">Role-based user access management</div></div></button>
+            <button class="rec-action" onclick="navTo('patient-records')"><div class="rec-action-icon red">&#128100;</div><div><div class="rec-action-label">Patient Records</div><div class="rec-action-sub">Deceased lock &amp; data integrity</div></div></button>
+            <button class="rec-action" onclick="navTo('audit')"><div class="rec-action-icon blue">&#128203;</div><div><div class="rec-action-label">Audit Log</div><div class="rec-action-sub">Transaction history &amp; system events</div></div></button>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Recent System Activity</div><div id="dash-activity"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <div class="page-header-left"><h2>Management Reports</h2><p>Aggregated data — no individual patient identifiers</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="window.print()">Print</button>
+          <button class="btn btn-secondary" onclick="loadAllReports()">Refresh</button>
+        </div>
+      </div>
+      <div class="info-banner-blue"><span>ℹ</span><div>All reports show <strong>anonymised aggregate data only</strong>. No individual patient details included.</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+        <div class="rec-stat blue"><div class="rec-stat-icon">&#127973;</div><div class="rec-stat-value" id="stat-clinic-count">—</div><div class="rec-stat-label">Active Clinics</div></div>
+        <div class="rec-stat green"><div class="rec-stat-icon">&#128101;</div><div class="rec-stat-value" id="stat-patient-total">—</div><div class="rec-stat-label">Total Patients</div></div>
+        <div class="rec-stat amber"><div class="rec-stat-icon">&#128138;</div><div class="rec-stat-value" id="stat-med-count">—</div><div class="rec-stat-label">Medications Tracked</div></div>
+        <div class="rec-stat" style="--accent:#534AB7;"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#534AB7;border-radius:12px 12px 0 0;"></div><div class="rec-stat-icon">📌</div><div class="rec-stat-value" id="stat-condition-count">—</div><div class="rec-stat-label">Conditions Tracked</div></div>
+      </div>
+      <div class="rec-two-col">
+        <div class="card"><div class="card-title">Patients per Clinic</div><p style="font-size:12px;color:var(--ink-3);margin-bottom:16px;">Distinct patients with at least one appointment per clinic.</p><div id="clinic-chart"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div></div>
+        <div class="card"><div class="card-title">Prescription Volume by Medication</div><p style="font-size:12px;color:var(--ink-3);margin-bottom:16px;">Total prescriptions issued per medication across all clinics.</p><div id="prescription-chart"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div></div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">Patient Conditions</div>
+        <p style="font-size:12px;color:var(--ink-3);margin-bottom:16px;">Distinct patients per condition across all clinics — all time.</p>
+        <div id="condition-chart"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ WEEKLY REPORT ═══ -->
+    <div class="page" id="page-weekly">
+      <div class="page-header">
+        <div class="page-header-left"><h2>Weekly Clinic Report</h2><p>Attendance by day, conditions &amp; drug totals</p></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Week of</label>
+            <input type="date" id="weekly-date" style="width:160px;"/>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Clinic</label>
+            <select id="weekly-clinic-filter" style="width:200px;">
+              <option value="0">All Clinics (combined)</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" onclick="window.print()">Print</button>
+          <button class="btn btn-primary" onclick="loadWeeklyReport()">Generate</button>
+        </div>
+      </div>
+      <div class="info-banner-blue"><span>ℹ</span><div>Weekly reports contain <strong>no individual patient identifiers</strong>. Select "All Clinics" for a combined report, or choose a specific clinic. (Management req. 2)</div></div>
+      <div id="weekly-report-wrap"><div class="empty" style="padding:48px 0;"><div class="empty-icon">&#128197;</div><h4>Select a week to generate the report</h4><p style="font-size:13px;margin-top:6px;color:var(--ink-3);">Choose any date — the report covers the Mon–Fri week containing that date.</p></div></div>
+    </div>
+
+    <!-- ═══ CHANGE REQUESTS ═══ -->
+    <div class="page" id="page-change-requests">
+      <div class="page-header">
+        <div class="page-header-left"><h2>Change Requests</h2><p>Patient data changes — review, accept or reject</p></div>
+        <button class="btn btn-primary" onclick="openNewCrModal()">+ New Request</button>
+      </div>
+      <div class="missed-notice" id="cr-pending-notice" style="display:none;"><span style="font-size:18px;">&#128203;</span><div id="cr-pending-text">Pending change requests awaiting review.</div></div>
+      <div class="info-banner-blue" style="margin-bottom:20px;"><span>ℹ</span><div>Accepted/rejected changes are <strong>logged without linking back to the patient record</strong>. The CHANGE_REQUEST table stores raw data snapshots only — no patient_id FK.</div></div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="card-title" style="margin:0;">Pending Review</div>
+          <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="loadChangeRequests()">Refresh</button>
+        </div>
+        <div id="cr-list"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Submit New Change Request</div>
+        <p style="font-size:13px;color:var(--ink-3);margin-bottom:16px;">Per data protection legislation, patients may request their personal information and changes. Submit those requests here for formal review.</p>
+        <div style="max-width:600px;">
+          <div class="form-row" style="margin-bottom:12px;"><label>Patient Identifier / Raw Data Snapshot</label><textarea id="cr-raw" rows="3" placeholder="Paste the patient's current record or describe the patient (no patient_id link is stored per req. 17)…"></textarea></div>
+          <div class="form-row" style="margin-bottom:16px;"><label>Requested Changes</label><textarea id="cr-changes" rows="3" placeholder="Describe what changes are needed and the reason…"></textarea></div>
+          <button class="btn btn-primary" onclick="submitChangeRequest()">Submit Change Request</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ACCESS CONTROL ═══ -->
+    <div class="page" id="page-access">
+      <div class="page-header"><div class="page-header-left"><h2>Access Control</h2><p>Role-based access management</p></div></div>
+      <div class="missed-notice" style="background:var(--blue-lt);border-color:#b5d4f4;color:var(--accent);"><span>ℹ</span><div>Access to personal patient information is restricted by role. Only accredited staff (Clinical, Receptionist, Medical_Records) may access the system. Management staff have <strong>no direct system access</strong>.</div></div>
+      <div class="rec-two-col" style="margin-top:20px;">
+        <div class="card">
+          <div class="card-title">Role Permissions Matrix</div>
+          <div class="table-wrap" style="margin-top:12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="min-width:200px;">Function</th>
+                  <th class="perm-col">Clinical</th>
+                  <th class="perm-col">Receptionist</th>
+                  <th class="perm-col">Med. Records</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>View patient records</td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-partial"><span class="perm-icon perm-partial" title="Limited view"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke="#854F0B" fill="none" stroke-linecap="round"><line x1="2" y1="8" x2="14" y2="8"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Update patient records</td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Create appointments</td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Update attendance</td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Issue prescriptions</td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-partial" title="Repeat only"><span class="perm-icon perm-partial"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke="#854F0B" fill="none" stroke-linecap="round"><line x1="2" y1="8" x2="14" y2="8"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Log incidents</td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>View / add comments</td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Generate reports</td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Review change requests</td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                </tr>
+                <tr>
+                  <td>Lock deceased records</td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-no"><span class="perm-icon perm-no"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span></td>
+                  <td class="perm-yes"><span class="perm-icon perm-yes"><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span></td>
+                </tr>
+                <tr class="flag-row">
+                  <td style="font-size:12px;color:var(--ink-3);">Transmit patient data externally</td>
+                  <td colspan="3" style="text-align:center;font-size:12px;color:var(--red);font-weight:600;">Only to accredited staff or the patient themselves (req. 14)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--ink-3);font-family:var(--font-mono);">
+            <span style="display:flex;align-items:center;gap:5px;"><span class="perm-icon perm-yes"><svg width="14" height="14" viewBox="0 0 16 16" stroke-width="2" stroke="var(--green)" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,8 6,12 14,4"/></svg></span> Allowed</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span class="perm-icon perm-partial"><svg width="14" height="14" viewBox="0 0 16 16" stroke-width="2" stroke="#d4900a" fill="none" stroke-linecap="round"><line x1="2" y1="8" x2="14" y2="8"/></svg></span> Partial</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span class="perm-icon perm-no"><svg width="14" height="14" viewBox="0 0 16 16" stroke-width="2" stroke="var(--red)" fill="none" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg></span> Denied</span>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-title">Active System Users</div>
+            <div id="access-user-list"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Role Definitions</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+              <div style="padding:12px 14px;background:var(--blue-lt);border-radius:8px;border-left:3px solid var(--accent);"><div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px;">Clinical</div><div style="font-size:12px;color:var(--ink-2);">Doctors, nurses, health visitors. Full patient record access during and between consultations.</div></div>
+              <div style="padding:12px 14px;background:var(--green-lt);border-radius:8px;border-left:3px solid var(--green);"><div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">Receptionist</div><div style="font-size:12px;color:var(--ink-2);">Appointment scheduling, attendance recording, repeat prescriptions. Limited patient view.</div></div>
+              <div style="padding:12px 14px;background:var(--purple-lt);border-radius:8px;border-left:3px solid #534AB7;"><div style="font-size:12px;font-weight:700;color:#534AB7;margin-bottom:4px;">Medical_Records</div><div style="font-size:12px;color:var(--ink-2);">Reports, change requests, data integrity, access management. No clinical functions.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PATIENT RECORDS ═══ -->
+    <div class="page" id="page-patient-records">
+      <div class="page-header"><div class="page-header-left"><h2>Patient Records</h2><p>Data integrity, deceased locks &amp; patient data</p></div></div>
+      <div class="rec-two-col">
+        <div class="card">
+          <div class="card-title">Lock Deceased Patient Record</div>
+          <p style="font-size:13px;color:var(--ink-3);margin-bottom:16px;">When notified of a patient's death, lock their record as read-only. Deceased records remain viewable.</p>
+          <div class="lock-row">
+            <div style="flex:1;">
+              <label>Patient Search (name or ID)</label>
+              <div style="position:relative;">
+                <input type="text" id="deceased-patient-search" placeholder="Search patient by name or ID…" oninput="filterDeceasedSearch()" autocomplete="off"/>
+                <div id="deceased-patient-result" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--accent-lt);border-top:none;border-radius:0 0 6px 6px;box-shadow:0 4px 16px rgba(15,17,23,.12);z-index:300;max-height:200px;overflow-y:auto;display:none;"></div>
+              </div>
+            </div>
+          </div>
+          <div id="deceased-selected-info" style="display:none;margin-bottom:12px;padding:12px 14px;background:var(--paper-2);border-radius:8px;border:1px solid var(--paper-3);">
+            <div style="font-size:12px;color:var(--ink-3);margin-bottom:2px;">Selected patient</div>
+            <div id="deceased-selected-name" style="font-size:14px;font-weight:600;color:var(--ink);"></div>
+            <div id="deceased-selected-meta" style="font-size:11px;color:var(--ink-3);font-family:var(--font-mono);margin-top:2px;"></div>
+          </div>
+          <!-- Shown only when patient is already deceased -->
+          <div id="deceased-already-note" style="display:none;margin-bottom:12px;" class="info-banner" style="background:var(--paper-2);border-color:var(--paper-3);color:var(--ink-3);">
+            <span>&#128274;</span>
+            <div>This patient is already marked as deceased. Their record is viewable but locked as read-only.</div>
+          </div>
+          <button class="btn btn-danger" id="deceased-lock-btn" style="display:none;" onclick="lockDeceasedRecord()">
+            &#128274; Confirm Lock — Mark as Deceased &amp; Read-Only
+          </button>
+          <div id="deceased-confirm" style="display:none;margin-top:12px;" class="info-banner">
+            <span>&#10003;</span><div id="deceased-confirm-text">Record locked.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">All Patients Overview</div>
+          <p style="font-size:13px;color:var(--ink-3);margin-bottom:16px;">View patient list for data integrity checks. Self-harm history highlighted.</p>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" id="pr-search" placeholder="Filter by name or ID…" oninput="filterPatientRecords()" style="flex:1;"/>
+            <button class="btn btn-primary" onclick="loadPatientRecords()">Load All</button>
+          </div>
+          <div id="pr-list"><div class="empty" style="padding:32px 0;"><h4>Click "Load All" to fetch patient records</h4></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AUDIT LOG ═══ -->
+    <div class="page" id="page-audit">
+      <div class="page-header"><div class="page-header-left"><h2>Audit Log</h2><p>Transaction record for all clinic sessions (Medical Records req. 3)</p></div><button class="btn btn-secondary" onclick="loadAuditLog()">Refresh</button></div>
+      <div class="missed-notice" style="background:var(--blue-lt);border-color:#b5d4f4;color:var(--accent);"><span>ℹ</span><div>A record of all transactions during clinic sessions is maintained here. (Medical Records req. 3)</div></div>
+      <div class="card" style="margin-top:16px;">
+        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;">
+          <div><label>From</label><input type="date" id="audit-from" style="width:150px;"/></div>
+          <div><label>To</label><input type="date" id="audit-to" style="width:150px;"/></div>
+          <div><label>Role</label>
+            <select id="audit-role" style="width:160px;">
+              <option value="">All roles</option>
+              <option value="Clinical">Clinical</option>
+              <option value="Receptionist">Receptionist</option>
+              <option value="Medical_Records">Medical Records</option>
+            </select>
+          </div>
+          <div><label>Clinic</label>
+            <select id="audit-clinic" style="width:180px;">
+              <option value="0">All Clinics</option>
+            </select>
+          </div>
+          <div><label>Staff ID</label>
+            <input type="number" id="audit-staff" min="1" placeholder="Any" style="width:90px;"/>
+          </div>
+          <button class="btn btn-primary" onclick="loadAuditLog()">Apply</button>
+        </div>
+        <div id="audit-log-wrap"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── New Change Request Modal ── -->
+<div class="modal-backdrop" id="new-cr-modal" onclick="closeModal('new-cr-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>New Change Request</h3><button class="modal-close" onclick="closeModal('new-cr-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-3);margin-bottom:16px;">This request will be logged without a direct link to the patient record.</p>
+      <div class="form-row" style="margin-bottom:12px;"><label>Patient Identifier / Raw Data</label><textarea id="modal-cr-raw" rows="3" placeholder="Describe the patient or paste their current record snapshot…"></textarea></div>
+      <div class="form-row" style="margin-bottom:16px;"><label>Requested Changes</label><textarea id="modal-cr-changes" rows="3" placeholder="What changes are needed and why…"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('new-cr-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModalChangeRequest()">Submit Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Deceased Lock Confirmation Modal ── -->
+<div class="modal-backdrop" id="patient-lock-confirm-modal" onclick="closeModal('patient-lock-confirm-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header" style="background:var(--red-lt);border-bottom-color:#f7c1c1;">
+      <h3 style="color:var(--red);">Confirm Record Lock</h3>
+      <button class="modal-close" onclick="closeModal('patient-lock-confirm-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--ink-2);margin-bottom:16px;">You are about to mark <strong id="lock-patient-name-modal">this patient</strong> as deceased and lock their record as <strong>read-only</strong>.</p>
+      <p style="font-size:13px;color:var(--ink-3);margin-bottom:20px;">The record remains accessible for viewing but no further edits will be possible.</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('patient-lock-confirm-modal')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmLock()">&#128274; Lock Record</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+<script src="records.js"></script>
+<script>initRecords();</script>
+</body>
+</html>
