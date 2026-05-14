@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MHIS — Clinical</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- Top -->
+<div id="app" style="min-height:100vh;">
+  <div class="topbar">
+    <div class="topbar-logo">MHIS <span>v1.0</span></div>
+    <nav class="topbar-nav" id="main-nav"></nav>
+    <div class="topbar-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div><div class="user-name" id="user-display"></div><div class="user-role" id="user-role-display"></div></div>
+      </div>
+      <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header"><div class="page-header-left"><h2 id="dash-greeting">Dashboard</h2><p>Your role overview</p></div></div>
+      <div id="dashboard-content"></div>
+    </div>
+
+    <!-- Patient List -->
+    <div class="page" id="page-patients">
+      <div class="page-header">
+        <div class="page-header-left"><h2>Patient Records</h2><p>Clinical staff access — all patients</p></div>
+		<button class="btn btn-primary" onclick="openNewPatientModal()">+ New Patient</button>
+        <button class="btn btn-secondary" onclick="loadPatients()">↺ Refresh</button>
+      </div>
+      <div class="search-bar"><input type="text" id="patient-search" placeholder="Search by name or ID…" oninput="filterPatients()"/></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="patients-table-wrap"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Patient Detail -->
+    <div class="page" id="page-patient-detail">
+      <div class="page-header">
+        <div class="page-header-left"><h2 id="detail-heading">Patient</h2><p id="detail-subheading"></p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="showPage('page-patients')">← Back</button>
+          <button class="btn btn-primary" id="save-patient-btn" onclick="savePatient()">Save Record</button>
+        </div>
+      </div>
+
+      <div id="detail-selfharm-alert" class="info-banner danger" style="display:none;">
+        <span style="font-size:20px;">⚠️</span>
+        <div><strong>Self-Harm History Flagged</strong><div style="font-size:12px;margin-top:2px;">This patient has a history of deliberate self-harm. Exercise caution.</div></div>
+      </div>
+      <div id="detail-deceased-alert" class="info-banner warn" style="display:none;">
+        <span>🔒</span><div><strong>Read-Only — Patient Deceased</strong><div style="font-size:12px;margin-top:2px;">This record is locked.</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="ptab-record" onclick="switchPatientTab('record',this)">📋 Record</button>
+        <button class="tab" id="ptab-consultations" onclick="switchPatientTab('consultations',this)">🩺 Consultations</button>
+        <button class="tab" id="ptab-comments" onclick="switchPatientTab('comments',this)">💬 Comments</button>
+      </div>
+
+      <!-- Record tab -->
+      <div id="ptab-content-record">
+        <div class="two-col" style="max-width:900px;">
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title" style="font-size:15px;">Personal Information</div>
+              <div class="form-row"><label>First Name</label><input type="text" id="pe-firstName"/></div>
+              <div class="form-row"><label>Last Name</label><input type="text" id="pe-lastName"/></div>
+              <div class="form-row"><label>Address</label><input type="text" id="pe-address"/></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="font-size:15px;">Clinical Flags</div>
+              <div class="form-row"><label>Risk Status</label>
+                <select id="pe-riskStatus">
+                  <option value="">— None —</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);"><input type="checkbox" id="pe-homeless" style="width:auto;"/> Currently homeless</label>
+                <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);"><input type="checkbox" id="pe-selfHarmHistory" style="width:auto;"/> History of deliberate self-harm</label>
+                <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);"><input type="checkbox" id="pe-deceased" style="width:auto;"/> Deceased (locks record read-only)</label>
+              </div>
+            </div>
+          </div>
+			<div class="card">
+			<div class="card-title" style="font-size:15px;">Known Adverse Reactions</div>
+			<p style="font-size:12px;color:var(--ink-3);margin-bottom:12px;">These are automatically checked during prescription to prevent dangerous drug assignments.</p>
+			<div class="form-row" style="margin-bottom:12px;">
+				<label>Add Reaction</label>
+				<div style="display:flex;gap:8px;">
+				<select id="ar-medicationId" style="flex:1;">
+					<option value="">— Select medication —</option>
+				</select>
+				<button class="btn btn-primary" style="white-space:nowrap;" onclick="addAdverseReaction()">+ Add</button>
+				</div>
+			</div>
+			<div class="form-row" style="margin-bottom:12px;">
+				<label>Description</label>
+				<input type="text" id="ar-description" placeholder="e.g. Causes severe rash, anaphylaxis risk…"/>
+			</div>
+			<div id="adverse-reactions-list"><div class="empty" style="padding:20px 0;"><p style="font-size:13px;">No known adverse reactions on file.</p></div></div>
+			</div>
+        </div>
+      </div>
+
+      <!-- Consultations tab -->
+      <div id="ptab-content-consultations" style="display:none;">
+        <div class="two-col">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <h3 style="font-family:var(--font-head);font-style:italic;font-size:20px;">Appointments</h3>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="loadPatientAppointments()">↺</button>
+            </div>
+            <div id="patient-appt-list"><div class="empty" style="padding:24px;"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+          </div>
+          <div id="consultation-detail-panel">
+            <div class="card" style="text-align:center;padding:48px 24px;border:2px dashed var(--paper-3);">
+              <div style="font-size:40px;margin-bottom:12px;">🩺</div>
+              <div style="font-family:var(--font-head);font-style:italic;font-size:20px;color:var(--ink-2);">Select a consultation</div>
+              <p style="font-size:13px;color:var(--ink-3);margin-top:6px;">Click an appointment on the left to view, review, and edit its clinical details.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments tab -->
+      <div id="ptab-content-comments" style="display:none;">
+        <div style="max-width:680px;">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-title" style="font-size:15px;">Add Clinical Comment</div>
+            <div class="form-row">
+              <label>Free-form note</label>
+              <textarea id="new-comment-text" placeholder="Record clinical observations, patient communications, risk assessments, or any relevant notes…" style="min-height:110px;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="addComment()">Add Comment</button>
+          </div>
+          <div id="comments-list"><div class="empty"><div class="spinner spinner-dark" style="margin:0 auto;"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Consultation Detail Modal ── -->
+<div class="modal-backdrop" id="consult-modal" onclick="closeModal('consult-modal')">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="consult-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <h3 id="cm-title">Consultation</h3>
+          <div class="consult-meta" id="cm-meta"></div>
+        </div>
+        <button class="modal-close" style="background:rgba(255,255,255,.2);color:#fff;" onclick="closeModal('consult-modal')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="cm-prev-banner" class="info-banner info" style="display:none;">
+        <span>ℹ</span><div id="cm-prev-text"></div>
+      </div>
+      <div id="cm-dropin-warn" class="info-banner warn" style="display:none;">
+        <span>⚠</span>
+        <div><strong>Drop-in session — previous consultation: <span id="cm-last-visit"></span></strong><br>
+        <span style="font-size:12px;">Verify patient is not attending multiple sessions to obtain extra medication.</span></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">🏥 Diagnosis / Condition</div>
+        <div class="form-grid">
+          <div class="form-row"><label>Condition</label><select id="cm-conditionId"><option value="">— Select condition —</option></select></div>
+          <div class="form-row"><label>Diagnosis Date</label><input type="date" id="cm-diagnosisDate"/></div>
+          <div class="form-row span-2"><label>Clinical Notes on Condition</label><textarea id="cm-conditionNotes" placeholder="Describe current presentation, changes from last visit, severity…" style="min-height:80px;"></textarea></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <span id="cm-prev-condition-label" style="font-size:12px;color:var(--ink-3);"></span>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">💊 Prescription</div>
+        <div id="cm-allergy-warn" class="info-banner danger" style="display:none;">
+          <span style="font-size:18px;">⚠️</span>
+          <div><strong>Allergy / Adverse Reaction Warning!</strong><br><span id="cm-allergy-detail" style="font-size:12px;"></span></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row"><label>Medication</label><select id="cm-medicationId" onchange="checkAllergyWarning()"><option value="">— None —</option></select></div>
+          <div class="form-row"><label>Issue Date</label><input type="date" id="cm-issueDate"/></div>
+          <div class="form-row span-2">
+            <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);">
+              <input type="checkbox" id="cm-repeat" style="width:auto;"/> Repeat prescription
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <span id="cm-prev-rx-label" style="font-size:12px;color:var(--ink-3);"></span>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">📅 Previous Consultation History</div>
+        <div id="cm-history-list"><p style="font-size:13px;color:var(--ink-3);">Loading…</p></div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('consult-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveConsultation()">💾 Save Consultation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Patient Modal -->
+<div class="modal-backdrop" id="new-patient-modal" onclick="closeModal('new-patient-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="consult-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h3>New Patient</h3>
+        <button class="modal-close" style="background:rgba(255,255,255,.2);color:#fff;" onclick="closeModal('new-patient-modal')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>First Name</label><input type="text" id="np-firstName"/></div>
+      <div class="form-row"><label>Last Name</label><input type="text" id="np-lastName"/></div>
+      <div class="form-row"><label>Address</label><input type="text" id="np-address"/></div>
+      <div class="form-row"><label>Risk Status</label>
+        <select id="np-riskStatus">
+          <option value="">— None —</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);"><input type="checkbox" id="np-homeless" style="width:auto;"/> Currently homeless</label>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink-2);"><input type="checkbox" id="np-selfHarmHistory" style="width:auto;"/> History of deliberate self-harm</label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('new-patient-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createPatient()">Create Patient</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="app.js"></script>
+<script src="clinical.js"></script>
+<script>initClinical();</script>
+</body>
+</html>
