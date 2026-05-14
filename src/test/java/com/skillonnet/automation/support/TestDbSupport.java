@@ -34,5 +34,15 @@ public final class TestDbSupport {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+		try (Connection c = db.newConnection();
+        var reader = new InputStreamReader(
+                Objects.requireNonNull(
+                        TestDbSupport.class.getResourceAsStream("/test-seed.sql"),
+                        "test-seed.sql"),
+                StandardCharsets.UTF_8)) {
+   			RunScript.execute(c, reader);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
     }
 }
