@@ -82,8 +82,8 @@
     .patient-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
 
     /* ── Repeat Prescription ── */
-    .rx-flow { display: flex; flex-direction: column; gap: 16px; max-width: 600px; }
-    .rx-step { background: #fff; border: 1px solid var(--paper-3); border-radius: 10px; overflow: hidden; }
+    .rx-flow { display: flex; flex-direction: column; gap: 16px; max-width: 600px; overflow: visible; }
+    .rx-step { background: #fff; border: 1px solid var(--paper-3); border-radius: 10px; overflow: visible; }
     .rx-step-header { padding: 14px 20px; background: var(--paper-2); border-bottom: 1px solid var(--paper-3); display: flex; align-items: center; gap: 10px; }
     .rx-step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); flex-shrink: 0; }
     .rx-step-title { font-size: 13px; font-weight: 600; color: var(--ink); }
@@ -91,11 +91,27 @@
     .rx-card { background: var(--paper-2); border-radius: 8px; padding: 16px 20px; }
     .rx-drug { font-family: var(--font-head); font-size: 20px; color: var(--ink); }
     .rx-detail { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); margin-top: 4px; }
+    #rx-patient-result {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid var(--accent-lt);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 8px 24px rgba(15,17,23,.15);
+      z-index: 999;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    #rx-patient-result:not(:empty) { display: block; }
     .drop-in-banner { background: linear-gradient(135deg, #fff8e1 0%, #fff3cc 100%); border: 1.5px solid #f5d88e; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; display: flex; gap: 14px; align-items: flex-start; }
     .drop-in-icon { font-size: 24px; flex-shrink: 0; }
     .drop-in-title { font-weight: 700; font-size: 13px; color: var(--amber); margin-bottom: 3px; }
     .drop-in-detail { font-size: 12px; color: var(--ink-2); }
-
+    
     /* ── Calendar side-panel ── */
     .cal-detail-panel { background: #fff; border: 1px solid var(--paper-3); border-radius: 10px; padding: 20px; min-height: 200px; }
     .cal-detail-title { font-family: var(--font-head); font-size: 18px; font-style: italic; color: var(--ink); margin-bottom: 14px; }
