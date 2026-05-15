@@ -11,9 +11,21 @@ function initClinical() {
   if (!requireAuth('Clinical')) return;
   initShell();
   buildClinicalNav();
+  _initDashboardHeader();
   showDashboard(`<button class="btn btn-secondary btn-full" onclick="showPatientsPage()">👤 Patient Records</button>`);
   loadMedications();
   loadConditions();
+}
+
+function _initDashboardHeader() {
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const greetEl = document.getElementById('dash-greeting');
+  if (greetEl) greetEl.textContent = `${greeting}, ${auth.user}.`;
+  const dateEl = document.getElementById('dash-date-label');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 }
 
 function buildClinicalNav() {

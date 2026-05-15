@@ -69,10 +69,13 @@ async function doLogin() {
     const s = {};
     results.forEach(r => s[r.key] = r.status);
     let found = null;
-    if (s.reports === 200)                          found = 'Medical_Records';
-    if (s.patients === 403)                          found = 'Medical_Records';
-    else if (s.appointments === 200 && s.reports === 403) found = 'Receptionist';
-    else if (s.patients === 200 && s.appointments === 403) found = 'Clinical';
+	if (s.reports === 200) {
+	found = 'Medical_Records';
+	} else if (s.appointments === 200) {
+	found = 'Receptionist';
+	} else if (s.patients === 200) {
+	found = 'Clinical';
+	}
     if (!found) { showLoginError('Could not determine role. Contact your administrator.'); btn.innerHTML = 'Sign In'; btn.disabled = false; return; }
     auth = { user, pass, role: found, userId: 1 };
     sessionStorage.setItem('mhis_auth', JSON.stringify({ user: auth.user, pass: auth.pass, role: auth.role, userId: auth.userId, api: API }));
@@ -126,16 +129,12 @@ function showDashboard(extraHtml) {
   document.getElementById('dash-greeting').textContent =
     (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + ', ' + auth.user + '.';
   const bc = auth.role === 'Clinical' ? 'badge-clinical' : auth.role === 'Receptionist' ? 'badge-receptionist' : 'badge-records';
-  let html = `<div class="card-grid">
+    let html = `<div class="card-grid" style="max-width:800px;margin:0 auto;">
     <div class="card"><div class="card-title">Your Role</div>
       <div style="font-size:22px;font-family:var(--font-head);font-style:italic;margin-bottom:8px;">${auth.role.replace('_', ' ')}</div>
       <span class="role-badge ${bc}">${auth.role}</span>
       <p style="margin-top:12px;font-size:12px;color:var(--ink-3);">Logged in as <strong>${auth.user}</strong></p></div>
     <div class="card"><div class="card-title">Quick Actions</div><div style="display:flex;flex-direction:column;gap:8px;">${extraHtml || ''}</div></div>
-    <div class="card"><div class="card-title">System</div>
-      <div style="font-size:12px;color:var(--ink-3);font-family:var(--font-mono);line-height:2.2;">
-        <div>API <strong style="color:var(--ink-2);">${API}</strong></div>
-        <div>Role <strong style="color:var(--ink-2);">${auth.role}</strong></div>
-        <div>Date <strong style="color:var(--ink-2);">${new Date().toLocaleDateString()}</strong></div></div></div></div>`;
+  </div>`;
   document.getElementById('dashboard-content').innerHTML = html;
-}
+}	
